@@ -3,6 +3,14 @@
  * The address class.
  */
 class Address {
+    /**
+     * The full name of contact person.
+     * @var string
+     */
+    private $contact;
+    private $address1;
+    private $address2 = '';
+    private $city;
     private $stateCode;
     private $postalCode;
     private $countryCode;
@@ -12,6 +20,22 @@ class Address {
      * @var boolean
      */
     private $isResidential = false;
+
+    public function getContact() {
+        return $this->contact;
+    }
+
+    public function getAddress1() {
+        return $this->address1;
+    }
+
+    public function getAddress2() {
+        return $this->address2;
+    }
+
+    public function getCity() {
+        return $this->city;
+    }
 
     public function getStateCode() {
         return $this->stateCode;
@@ -27,6 +51,22 @@ class Address {
 
     public function isResidential() {
         return $this->isResidential;
+    }
+
+    public function setContact($contact) {
+        $this->contact = $contact;
+    }
+
+    public function setAddress1($address1) {
+        $this->address1 = $address1;
+    }
+
+    public function setAddress2($address2) {
+        $this->address2 = $address2;
+    }
+
+    public function setCity($city) {
+        $this->city = $city;
     }
 
     public function setStateCode($stateCode) {
