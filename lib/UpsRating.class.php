@@ -43,7 +43,7 @@ class UpsRating extends UpsApi {
     private $serviceType;
 
     /**
-     * The package weight in lbs. Default is 1 lbs.
+     * The package weight. Default is 1 lbs.
      * @var float
      */
     private $weight = 1.0;
@@ -114,7 +114,7 @@ class UpsRating extends UpsApi {
                         $xml->endElement();
                         $xml->startElement('PackageWeight');
                             $xml->startElement('UnitOfMeasurement');
-                                $xml->writeElement('Code', 'LBS');
+                                $xml->writeElement('Code', $this->getWeightUnit());
                             $xml->endElement();
                             $xml->writeElement('Weight', $this->weight);
                         $xml->endElement();
@@ -175,7 +175,7 @@ class UpsRating extends UpsApi {
     }
 
     /**
-     * Set the package weight in lbs.
+     * Set the package weight.
      * @param float $weight
      */
     public function setWeight($weight) {

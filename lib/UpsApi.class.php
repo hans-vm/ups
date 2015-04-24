@@ -1,4 +1,5 @@
 <?php
+require_once('UpsConstants.class.php');
 require_once('UpsException.class.php');
 
 /**
@@ -36,6 +37,12 @@ abstract class UpsApi {
     private $isDemo = false;
 
     /**
+     * The unit of measurement for package weight. One of <tt>UpsConstants::WEIGHT_UNIT_X</tt> constants. Default is LBS.
+     * @var string
+     */
+    private $weightUnit = UpsConstants::WEIGHT_UNIT_LBS;
+
+    /**
      * Set the UPS account details.
      * @param string $accessLicenseNumber
      * @param string $userId
@@ -63,6 +70,22 @@ abstract class UpsApi {
      */
     public function setDemoMode($isDemo = true) {
         $this->isDemo = $isDemo;
+    }
+
+    /**
+     * Get the unit of measurement for package weight.
+     * @return string One of <tt>UpsConstants::WEIGHT_UNIT_X</tt> constants.
+     */
+    public function getWeightUnit() {
+        return $this->weightUnit;
+    }
+
+    /**
+     * Set the unit of measurement for package weight.
+     * @param string $unit One of <tt>UpsConstants::WEIGHT_UNIT_X</tt> constants.
+     */
+    public function setWeightUnit($unit) {
+        $this->weightUnit = $unit;
     }
 
     /**
