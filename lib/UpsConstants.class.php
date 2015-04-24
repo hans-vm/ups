@@ -24,6 +24,12 @@ class UpsConstants {
     const TYPE_2ND_DAY_AIR_AM = '59';
     const TYPE_3DAY_SELECT = '12';
 
+    // UPS service types for international shipments.
+    const TYPE_STANDARD = '11';
+    const TYPE_WORLDWIDE_EXPRESS = '07';
+    const TYPE_WORLDWIDE_EXPRESS_PLUS = '54';
+    const TYPE_WORLDWIDE_EXPEDITED = '08';
+
     // UPS pickup types.
     const PICKUP_TYPE_DAILY_PICKUP = '01';
     const PICKUP_TYPE_CUSTOMER_COUNTER = '03';
