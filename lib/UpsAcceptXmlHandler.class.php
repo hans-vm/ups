@@ -1,59 +1,103 @@
 <?php
+require_once('UpsException.class.php');
+
 /**
  * The class to parse the UPS Shipping Accept API response.
  */
 class UpsAcceptXmlHandler {
-    public $error;
-    public $label;
+    /**
+     * The full xPath to the current element.
+     * @var array
+     */
+    private $currentPath = array();
 
-    private $totalCharge = 0;
+    /**
+     * Base64 encoded shipping label.
+     * @var string
+     */
+    private $label = '';
 
-    private $currentTag;
-    private $depth = 0;
-    private $path = array();
+    /**
+     * The total charge. An associative array with following keys:
+     *  - {string} currency: The currency code.
+     *  - {float} amount: The charge amount.
+     * @var array
+     */
+    private $totalCharge = array();
 
-    // === Public Methods === //
+    /**
+     * The response status code. 1 for success, 0 for failure.
+     * @var integer
+     */
+    private $statusCode = 0;
 
+    /**
+     * The description of error occured.
+     * @var string
+     */
+    private $errorDescription = '';
+
+    /**
+     * XML character data handler.
+     */
     public function characterData($parser, $data) {
-        $xpath = implode('/', $this->path);
-        switch ($xpath) {
-        case 'SHIPMENTCHARGES/TOTALCHARGES/MONETARYVALUE':
-            $this->totalCharge = $data;
+        $tag = implode('/', $this->currentPath);
+        switch ($tag) {
+        case 'SHIPMENTACCEPTRESPONSE/SHIPMENTRESULTS/SHIPMENTCHARGES/TOTALCHARGES/CURRENCYCODE':
+            $this->totalCharge['currency'] = $data;
             break;
-        case 'ERROR/ERRORDESCRIPTION':
-            $this->error = $data;
+        case 'SHIPMENTACCEPTRESPONSE/SHIPMENTRESULTS/SHIPMENTCHARGES/TOTALCHARGES/MONETARYVALUE':
+            $this->totalCharge['amount'] = (float)$data;
             break;
-        case 'PACKAGERESULTS/LABELIMAGE/GRAPHICIMAGE':
+        case 'SHIPMENTACCEPTRESPONSE/SHIPMENTRESULTS/PACKAGERESULTS/LABELIMAGE/GRAPHICIMAGE':
             $this->label = $data;
             break;
+        case 'SHIPMENTACCEPTRESPONSE/RESPONSE/RESPONSESTATUSCODE':
+            $this->statusCode = (int)$data;
+            break;
+        case 'SHIPMENTACCEPTRESPONSE/RESPONSE/ERROR/ERRORDESCRIPTION':
+            $this->errorDescription = $data;
+            break;
         }
-    }
-
-    public function endElement($parser, $name) {
-        $this->currentTag = '';
-
-        if ($this->depth > 1) {
-            array_pop($this->path);
-        }
-
-        $this->depth--;
     }
 
     /**
-     * Get the total charge of shipments.
-     * @return float
+     * XML start element handler.
      */
-    public function getTotalCharge() {
-        return (float)$this->totalCharge;
+    public function startElement($parser, $name, $attrs) {
+        array_push($this->currentPath, $name);
     }
 
-    public function startElement($parser, $name, $attrs) {
-        $this->currentTag = $name;
+    /**
+     * XML end element handler.
+     */
+    public function endElement($parser, $name) {
+        array_pop($this->currentPath);
+    }
 
-        if ($this->depth > 1) {
-            array_push($this->path, $name);
+    /**
+     * Get the total charge of shipment.
+     * @return array An associative array with following keys:
+     *  - {string} currency: The currency code.
+     *  - {float} amount: The charge amount.
+     * @throws UpsException on error.
+     */
+    public function getTotalCharge() {
+        if (!$this->statusCode) {
+            throw new UpsException($this->errorDescription);
         }
+        return $this->totalCharge;
+    }
 
-        $this->depth++;
+    /**
+     * Retrieve the shipping label.
+     * @return string
+     * @throws UpsException on error.
+     */
+    public function getLabel() {
+        if (!$this->statusCode) {
+            throw new UpsException($this->errorDescription);
+        }
+        return $this->label;
     }
 }

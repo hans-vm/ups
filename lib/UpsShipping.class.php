@@ -58,7 +58,7 @@ class UpsShipping extends UpsApi {
         // Get the UPS Access Request XML.
         $request = $this->getAccessRequest();
 
-        // Compose the request XML.
+        // Compose the Shipment Confirm Request XML.
         $xml = new XMLWriter();
         // Use memory for string output.
         $xml->openMemory();
@@ -134,20 +134,16 @@ class UpsShipping extends UpsApi {
         $xml->endDocument();
         $request .= $xml->outputMemory();
 
-        // Call the API.
+        // Call the Shipment Confirm API.
         $url = $this->isDemoMode() ? self::URL_CONFIRM_DEMO : self::URL_CONFIRM_LIVE;
         $response = $this->callApi($url, $request);
 
         // Parse the API response.
         $confirmHandler = new UpsConfirmXmlHandler();
         $this->parseResponse($response, $confirmHandler);
+        $shipmentDigest = $confirmHandler->getShipmentDigest();
 
-        if (is_null($confirmHandler->digest)) {
-            $errorMessage = (!is_null($confirmHandler->error)) ? $confirmHandler->error : 'Unable to confirm shipping.';
-            throw new UpsException($errorMessage);
-        }
-
-        // Submit acceptance request to UPS.
+        // Compose the Shipment Accept Request XML.
         $xml->startDocument();
             $xml->startElement('ShipmentAcceptRequest');
                 $xml->writeAttribute('xml:lang', 'en-US');
@@ -159,12 +155,13 @@ class UpsShipping extends UpsApi {
                     $xml->writeElement('RequestAction', 'ShipAccept');
                     $xml->writeElement('RequestOption', '01');
                 $xml->endElement();
-                $xml->writeElement('ShipmentDigest', $confirmHandler->digest);
+                $xml->writeElement('ShipmentDigest', $shipmentDigest);
             $xml->endElement();
         $xml->endDocument();
 
         $request = $this->getAccessRequest() . $xml->outputMemory();
 
+        // Call the Shipment Accept API.
         $url = $this->isDemoMode() ? self::URL_ACCEPT_DEMO : self::URL_ACCEPT_LIVE;
         $response = $this->callApi($url, $request);
 
@@ -172,20 +169,15 @@ class UpsShipping extends UpsApi {
         $acceptHandler = new UpsAcceptXmlHandler();
         $this->parseResponse($response, $acceptHandler);
 
-        if (is_null($acceptHandler->label)) {
-            $errorMessage = !is_null($acceptHandler->error) ? $acceptHandler->error : 'Unable to obtain shipping label.';
-            throw new UpsException($errorMessage);
-        }
-
         // Get and save the shipping label as PNG.
-        $label = $this->encodePng($acceptHandler->label);
+        $label = $this->encodePng($acceptHandler->getLabel());
         if ($label !== false) {
             // Create a directory if not exists.
             if (!file_exists(LABEL_DIRECTORY)) {
                 @mkdir(LABEL_DIRECTORY, 0777, true);
             }
 
-            $fp = fopen(LABEL_DIRECTORY . '/' . $confirmHandler->trackingNumber . '.png', 'w');
+            $fp = fopen(LABEL_DIRECTORY . '/' . $confirmHandler->getTrackingNumber() . '.png', 'w');
             if (!$fp) {
                 throw new UpsException('Could not open file for write.');
             }
@@ -198,7 +190,7 @@ class UpsShipping extends UpsApi {
         }
 
         return array(
-            'trackingNumber' => $confirmHandler->trackingNumber,
+            'trackingNumber' => $confirmHandler->getTrackingNumber(),
             'totalCharge' => $acceptHandler->getTotalCharge()
         );
     }
