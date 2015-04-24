@@ -18,6 +18,18 @@ class UpsTimeInTransitXmlHandler {
     private $service = array();
 
     /**
+     * The list of candidates for from address.
+     * @var array
+     */
+    private $transitFromList = array();
+
+    /**
+     * The list of candidates for shipping address.
+     * @var array
+     */
+    private $transitToList = array();
+
+    /**
      * The response status code. 1 for success, 0 for failure.
      * @var integer
      */
@@ -35,6 +47,34 @@ class UpsTimeInTransitXmlHandler {
     public function characterData($parser, $data) {
         $tag = implode('/', $this->currentPath);
         switch ($tag) {
+            case 'TIMEINTRANSITRESPONSE/TRANSITFROMLIST/CANDIDATE/ADDRESSARTIFACTFORMAT/POLITICALDIVISION2':
+                $this->transitFromList[] = array(
+                    'city' => $data
+                );
+                break;
+            case 'TIMEINTRANSITRESPONSE/TRANSITFROMLIST/CANDIDATE/ADDRESSARTIFACTFORMAT/POLITICALDIVISION1':
+                $this->transitFromList[count($this->transitFromList) - 1]['state'] = $data;
+                break;
+            case 'TIMEINTRANSITRESPONSE/TRANSITFROMLIST/CANDIDATE/ADDRESSARTIFACTFORMAT/COUNTRYCODE':
+                $this->transitFromList[count($this->transitFromList) - 1]['country'] = $data;
+                break;
+            case 'TIMEINTRANSITRESPONSE/TRANSITFROMLIST/CANDIDATE/ADDRESSARTIFACTFORMAT/POSTCODEPRIMARYLOW':
+                $this->transitFromList[count($this->transitFromList) - 1]['postal'] = $data;
+                break;
+            case 'TIMEINTRANSITRESPONSE/TRANSITTOLIST/CANDIDATE/ADDRESSARTIFACTFORMAT/POLITICALDIVISION2':
+                $this->transitToList[] = array(
+                    'city' => $data
+                );
+                break;
+            case 'TIMEINTRANSITRESPONSE/TRANSITTOLIST/CANDIDATE/ADDRESSARTIFACTFORMAT/POLITICALDIVISION1':
+                $this->transitToList[count($this->transitToList) - 1]['state'] = $data;
+                break;
+            case 'TIMEINTRANSITRESPONSE/TRANSITTOLIST/CANDIDATE/ADDRESSARTIFACTFORMAT/COUNTRYCODE':
+                $this->transitToList[count($this->transitToList) - 1]['country'] = $data;
+                break;
+            case 'TIMEINTRANSITRESPONSE/TRANSITTOLIST/CANDIDATE/ADDRESSARTIFACTFORMAT/POSTCODEPRIMARYLOW':
+                $this->transitToList[count($this->transitToList) - 1]['postal'] = $data;
+                break;
             case 'TIMEINTRANSITRESPONSE/RESPONSE/RESPONSESTATUSCODE':
                 $this->statusCode = (int)$data;
                 break;
@@ -98,6 +138,12 @@ class UpsTimeInTransitXmlHandler {
     public function getService() {
         if (!$this->statusCode) {
             throw new UpsException($this->errorDescription);
+        }
+        if (!empty($this->transitFromList)) {
+            throw new UpsException('The from address is invalid.');
+        }
+        if (!empty($this->transitToList)) {
+            throw new UpsException('The shipping address is invalid.');
         }
         return $this->service;
     }

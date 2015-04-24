@@ -119,7 +119,7 @@ class UpsTimeInTransit extends UpsApi {
     }
 
     /**
-     * Set the package weight in lbs.
+     * Set the package weight.
      * @param float $weight
      */
     public function setWeight($weight) {
