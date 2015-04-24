@@ -13,6 +13,12 @@ class UpsRating extends UpsApi {
     const URL_RATING_LIVE = 'https://www.ups.com/ups.app/xml/Rate';
 
     /**
+     * The UPS pickup type. One of the <tt>UpsConstants::PICKUP_TYPE_X</tt> constants. Default is Daily Pickup.
+     * @var string
+     */
+    private $pickupType = UpsConstants::PICKUP_TYPE_DAILY_PICKUP;
+
+    /**
      * The from address.
      * @var Address
      */
@@ -69,7 +75,7 @@ class UpsRating extends UpsApi {
                     $xml->writeElement('RequestOption', 'Rate');
                 $xml->endElement();
                 $xml->startElement('PickupType');
-                    $xml->writeElement('Code', '01');
+                    $xml->writeElement('Code', $this->pickupType);
                 $xml->endElement();
                 $xml->startElement('Shipment');
                     $xml->startElement('Shipper');
@@ -126,6 +132,14 @@ class UpsRating extends UpsApi {
         $handler = new UpsRatingXmlHandler();
         $this->parseResponse($response, $handler);
         return $handler->getRate();
+    }
+
+    /**
+     * Set the UPS pickup type.
+     * @param string $pickupType One of the <tt>UpsConstants::PICKUP_TYPE_X</tt> constants.
+     */
+    public function setPickupType($pickupType) {
+        $this->pickupType = $pickupType;
     }
 
     /**

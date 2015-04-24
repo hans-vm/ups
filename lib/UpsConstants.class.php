@@ -23,4 +23,12 @@ class UpsConstants {
     const TYPE_2ND_DAY_AIR = '02';
     const TYPE_2ND_DAY_AIR_AM = '59';
     const TYPE_3DAY_SELECT = '12';
+
+    // UPS pickup types.
+    const PICKUP_TYPE_DAILY_PICKUP = '01';
+    const PICKUP_TYPE_CUSTOMER_COUNTER = '03';
+    const PICKUP_TYPE_ONE_TIME_PICKUP = '06';
+    const PICKUP_TYPE_ON_CALL_AIR = '07';
+    const PICKUP_TYPE_LETTER_CENTER = '19';
+    const PICKUP_TYPE_AIR_SERVICE_CENTER = '20';
 }
