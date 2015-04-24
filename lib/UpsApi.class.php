@@ -43,6 +43,12 @@ abstract class UpsApi {
     private $weightUnit = UpsConstants::WEIGHT_UNIT_LBS;
 
     /**
+     * The unit of measurement for package dimension. One of <tt>UpsConstants::DIMENSION_UNIT_X</tt> constants. Default is inch.
+     * @var string
+     */
+    private $dimensionUnit = UpsConstants::DIMENSION_UNIT_INCH;
+
+    /**
      * Set the UPS account details.
      * @param string $accessLicenseNumber
      * @param string $userId
@@ -86,6 +92,22 @@ abstract class UpsApi {
      */
     public function setWeightUnit($unit) {
         $this->weightUnit = $unit;
+    }
+
+    /**
+     * Get the unit of measurement for package dimension.
+     * @return string One of <tt>UpsConstants::DIMENSION_UNIT_X</tt> constants.
+     */
+    public function getDimensionUnit() {
+        return $this->dimensionUnit;
+    }
+
+    /**
+     * Set the unit of measurement for package dimension.
+     * @param string $unit One of <tt>UpsConstants::DIMENSION_UNIT_X</tt> constants.
+     */
+    public function setDimensionUnit($unit) {
+        $this->dimensionUnit = $unit;
     }
 
     /**

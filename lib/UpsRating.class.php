@@ -49,6 +49,24 @@ class UpsRating extends UpsApi {
     private $weight = 1.0;
 
     /**
+     * The package length.
+     * @var integer
+     */
+    private $length = 0;
+
+    /**
+     * The package width.
+     * @var integer
+     */
+    private $width = 0;
+
+    /**
+     * The package height.
+     * @var integer
+     */
+    private $height = 0;
+
+    /**
      * Get the shipping rate from UPS.
      * @return array An associative array with following keys:
      *  - {string} currency: The currency code.
@@ -118,6 +136,17 @@ class UpsRating extends UpsApi {
                             $xml->endElement();
                             $xml->writeElement('Weight', $this->weight);
                         $xml->endElement();
+                        // If any of the dimensions is unknown, don't send dimensions information.
+                        if ($this->length && $this->width && $this->height) {
+                            $xml->startElement('Dimensions');
+                                $xml->startElement('UnitOfMeasurement');
+                                    $xml->writeElement('Code', $this->getDimensionUnit());
+                                $xml->endElement();
+                                $xml->writeElement('Length', $this->length);
+                                $xml->writeElement('Width', $this->width);
+                                $xml->writeElement('Height', $this->height);
+                            $xml->endElement();
+                        }
                     $xml->endElement();
                 $xml->endElement();
             $xml->endElement();
@@ -180,5 +209,17 @@ class UpsRating extends UpsApi {
      */
     public function setWeight($weight) {
         $this->weight = $weight;
+    }
+
+    /**
+     * Set the dimension of package shipped.
+     * @param int $length
+     * @param int $width
+     * @param int $height
+     */
+    public function setPackageDimension($length, $width, $height) {
+        $this->length = $length;
+        $this->width = $width;
+        $this->height = $height;
     }
 }

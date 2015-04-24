@@ -35,4 +35,8 @@ class UpsConstants {
     // Unit of measurement for package weight.
     const WEIGHT_UNIT_LBS = 'LBS';
     const WEIGHT_UNIT_KGS = 'KGS';
+
+    // Unit of measurement for package dimension.
+    const DIMENSION_UNIT_INCH = 'IN';
+    const DIMENSION_UNIT_CENTIMETER = 'CM';
 }
