@@ -1,4 +1,6 @@
 <?php
+require_once('UpsException.class.php');
+
 /**
  * The base class for UPS API wrappers.
  */
@@ -95,7 +97,7 @@ abstract class UpsApi {
      * @param string $url
      * @param string $request XML for API request.
      * @return string The response XML.
-     * @throws Exception on error.
+     * @throws UpsException on error.
      */
     protected function callApi($url, $request) {
         $options = array(
@@ -122,15 +124,15 @@ abstract class UpsApi {
 
         $ch = curl_init();
         if (!$ch) {
-            throw new Exception('Could not initiate the cURL instance.');
+            throw new UpsException('Could not initiate the cURL instance.');
         }
 
         if (!curl_setopt_array($ch, $options)) {
-            throw new Exception('Could not set the cURL options.');
+            throw new UpsException('Could not set the cURL options.');
         }
         $result = curl_exec($ch);
         if ($result === false) {
-            throw new Exception(curl_error($ch));
+            throw new UpsException(curl_error($ch));
         }
         curl_close($ch);
 

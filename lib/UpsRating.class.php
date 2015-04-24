@@ -2,6 +2,7 @@
 require_once('Address.class.php');
 require_once('UpsApi.class.php');
 require_once('UpsConstants.class.php');
+require_once('UpsException.class.php');
 require_once('UpsRatingXmlHandler.class.php');
 
 /**
@@ -43,13 +44,16 @@ class UpsRating extends UpsApi {
 
     /**
      * Get the shipping rate from UPS.
-     * @return array|false The shipping rate, @c false when failed to retrieve.
+     * @return array An associative array with following keys:
+     *  - {string} currency: The currency code.
+     *  - {float} amount: The rate.
+     * @throws UpsException on error.
      */
     public function getRate() {
         // Get the UPS Access Request XML.
         $request = $this->getAccessRequest();
 
-        // Compose the request XML.
+        // Compose the Rating Service Selection Request XML.
         $xml = new XMLWriter();
         // Use memory for string output.
         $xml->openMemory();
@@ -114,17 +118,13 @@ class UpsRating extends UpsApi {
         $xml->endDocument();
         $request .= $xml->outputMemory();
 
+        // Call the UPS Rating API.
         $url = $this->isDemoMode() ? self::URL_RATING_DEMO : self::URL_RATING_LIVE;
-        try {
-            $result = $this->callApi($url, $request);
-        } catch (Exception $e) {
-            error_log($e->getMessage());
-            return false;
-        }
+        $response = $this->callApi($url, $request);
 
         // Parse the API response.
         $handler = new UpsRatingXmlHandler();
-        $this->parseResponse($result, $handler);
+        $this->parseResponse($response, $handler);
         return $handler->getRate();
     }
 

@@ -1,4 +1,6 @@
 <?php
+require_once('UpsException.class.php');
+
 /**
  * The class to parse the UPS Rating API response.
  */
@@ -18,6 +20,18 @@ class UpsRatingXmlHandler {
     private $rate = array();
 
     /**
+     * The response status code. 1 for success, 0 for failure.
+     * @var integer
+     */
+    private $statusCode = 0;
+
+    /**
+     * The description of error occured.
+     * @var string
+     */
+    private $errorDescription = '';
+
+    /**
      * XML character data handler.
      */
     public function characterData($parser, $data) {
@@ -28,6 +42,12 @@ class UpsRatingXmlHandler {
                 break;
             case 'RATINGSERVICESELECTIONRESPONSE/RATEDSHIPMENT/TOTALCHARGES/MONETARYVALUE':
                 $this->rate['amount'] = (float)$data;
+                break;
+            case 'RATINGSERVICESELECTIONRESPONSE/RESPONSE/RESPONSESTATUSCODE':
+                $this->statusCode = (int)$data;
+                break;
+            case 'RATINGSERVICESELECTIONRESPONSE/RESPONSE/ERROR/ERRORDESCRIPTION':
+                $this->errorDescription = $data;
                 break;
         }
     }
@@ -51,8 +71,12 @@ class UpsRatingXmlHandler {
      * @return array An associative array with following keys:
      *  - {string} currency: The currency code.
      *  - {float} amount: The rate.
+     * @throws UpsException on error.
      */
     public function getRate() {
+        if (!$this->statusCode) {
+            throw new UpsException($this->errorDescription);
+        }
         return $this->rate;
     }
 }
