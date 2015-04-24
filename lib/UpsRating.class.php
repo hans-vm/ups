@@ -2,6 +2,7 @@
 require_once('Address.class.php');
 require_once('UpsApi.class.php');
 require_once('UpsConstants.class.php');
+require_once('UpsRatingXmlHandler.class.php');
 
 /**
  * UPS Rating API wrapper.
@@ -42,7 +43,7 @@ class UpsRating extends UpsApi {
 
     /**
      * Get the shipping rate from UPS.
-     * @return float|false The shipping rate, @c false when failed to retrieve.
+     * @return array|false The shipping rate, @c false when failed to retrieve.
      */
     public function getRate() {
         // Get the UPS Access Request XML.
@@ -121,34 +122,10 @@ class UpsRating extends UpsApi {
             return false;
         }
 
-        $xmlParser = xml_parser_create();
-        xml_parse_into_struct($xmlParser, $result, $values, $index);
-        xml_parser_free($xmlParser);
-        $params = array();
-        $level = array();
-        foreach ($values as $xmlElem) {
-            if ($xmlElem['type'] == 'open') {
-                if (array_key_exists('attributes', $xmlElem)) {
-                    list($level[$xmlElem['level']],$extra) = array_values($xmlElem['attributes']);
-                } else {
-                    $level[$xmlElem['level']] = $xmlElem['tag'];
-                }
-            }
-            if ($xmlElem['type'] == 'complete') {
-                $startLevel = 1;
-                // FIXME: Can we do this without an eval()?
-                $phpStmt = '$params';
-                while ($startLevel < $xmlElem['level']) {
-                    $phpStmt .= '[$level['.$startLevel.']]';
-                    $startLevel++;
-                }
-                $phpStmt .= '[$xmlElem["tag"]] = isset($xmlElem["value"]) ? $xmlElem["value"] : null;';
-                eval($phpStmt);
-            }
-        }
-
-        $charge = $params['RATINGSERVICESELECTIONRESPONSE']['RATEDSHIPMENT']['TOTALCHARGES'];
-        return (float)$charge['MONETARYVALUE'];
+        // Parse the API response.
+        $handler = new UpsRatingXmlHandler();
+        $this->parseResponse($result, $handler);
+        return $handler->getRate();
     }
 
     /**
