@@ -4,6 +4,7 @@ require_once('UpsApi.class.php');
 require_once('UpsAcceptXmlHandler.class.php');
 require_once('UpsConfirmXmlHandler.class.php');
 require_once('UpsConstants.class.php');
+require_once('UpsException.class.php');
 
 // The directory where shipping labels are saved as PNG.
 define('LABEL_DIRECTORY', 'labels');
@@ -50,7 +51,8 @@ class UpsShipping extends UpsApi {
     /**
      * Create a new UPS shipment.
      * Save the shipping label with a name of tracking number.
-     * @return array|false An associative array of tracking number and total charge, @c false when failed to create a new shipment.
+     * @return array An associative array of tracking number and total charge.
+     * @throws UpsException on error.
      */
     public function ship() {
         // Get the UPS Access Request XML.
@@ -134,21 +136,15 @@ class UpsShipping extends UpsApi {
 
         // Call the API.
         $url = $this->isDemoMode() ? self::URL_CONFIRM_DEMO : self::URL_CONFIRM_LIVE;
-        try {
-            $result = $this->callApi($url, $request);
-        } catch (Exception $e) {
-            error_log($e->getMessage());
-            return false;
-        }
+        $response = $this->callApi($url, $request);
 
         // Parse the API response.
         $confirmHandler = new UpsConfirmXmlHandler();
-        $this->parseResponse($result, $confirmHandler);
+        $this->parseResponse($response, $confirmHandler);
 
         if (is_null($confirmHandler->digest)) {
             $errorMessage = (!is_null($confirmHandler->error)) ? $confirmHandler->error : 'Unable to confirm shipping.';
-            error_log($errorMessage);
-            return false;
+            throw new UpsException($errorMessage);
         }
 
         // Submit acceptance request to UPS.
@@ -170,21 +166,15 @@ class UpsShipping extends UpsApi {
         $request = $this->getAccessRequest() . $xml->outputMemory();
 
         $url = $this->isDemoMode() ? self::URL_ACCEPT_DEMO : self::URL_ACCEPT_LIVE;
-        try {
-            $result = $this->callApi($url, $request);
-        } catch (Exception $e) {
-            error_log($e->getMessage());
-            return false;
-        }
+        $response = $this->callApi($url, $request);
 
         // Parse the acceptance response.
         $acceptHandler = new UpsAcceptXmlHandler();
-        $this->parseResponse($result, $acceptHandler);
+        $this->parseResponse($response, $acceptHandler);
 
         if (is_null($acceptHandler->label)) {
             $errorMessage = !is_null($acceptHandler->error) ? $acceptHandler->error : 'Unable to obtain shipping label.';
-            error_log($errorMessage);
-            return false;
+            throw new UpsException($errorMessage);
         }
 
         // Get and save the shipping label as PNG.
@@ -197,14 +187,12 @@ class UpsShipping extends UpsApi {
 
             $fp = fopen(LABEL_DIRECTORY . '/' . $confirmHandler->trackingNumber . '.png', 'w');
             if (!$fp) {
-                error_log('Could not open file for write.');
-                return false;
+                throw new UpsException('Could not open file for write.');
             }
 
             $written = fwrite($fp, $label);
             if (!$written) {
-                error_log('Could not save the label.');
-                return false;
+                throw new UpsException('Could not save the label.');
             }
             fclose($fp);
         }
