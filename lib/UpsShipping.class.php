@@ -122,7 +122,7 @@ class UpsShipping extends UpsApi {
                         $xml->endElement();
                         $xml->startElement('PackageWeight');
                             $xml->startElement('UnitOfMeasurement');
-                                $xml->writeElement('Code', 'LBS');
+                                $xml->writeElement('Code', $this->getWeightUnit());
                             $xml->endElement();
                             $xml->writeElement('Weight', number_format($this->weight, 2, '.', ''));
                         $xml->endElement();
