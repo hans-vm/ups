@@ -39,6 +39,7 @@ class UpsTimeInTransit extends UpsApi {
     /**
      * Retrieve the delivery information.
      * @return array An array of service summary.
+     * @throws UpsException on error.
      */
     public function getDeliveryInformation() {
         // Get the UPS Access Request XML.
