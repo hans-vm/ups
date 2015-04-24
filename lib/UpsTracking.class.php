@@ -2,6 +2,7 @@
 require_once('Address.class.php');
 require_once('UpsApi.class.php');
 require_once('UpsConstants.class.php');
+require_once('UpsException.class.php');
 require_once('UpsTrackingXmlHandler.class.php');
 
 /**
@@ -15,6 +16,7 @@ class UpsTracking extends UpsApi {
      * Request tracking information.
      * @param string $trackingNumber The shipment tracking number.
      * @return string The last tracking status.
+     * @throws UpsException on error.
      */
     public function track($trackingNumber) {
         // Get the UPS Access Request XML.
@@ -43,25 +45,11 @@ class UpsTracking extends UpsApi {
 
         // Call the UPS Tracking API.
         $url = $this->isDemoMode() ? self::URL_TRACK_DEMO : self::URL_TRACK_LIVE;
-        try {
-            $result = $this->callApi($url, $request);
-        } catch (Exception $e) {
-            error_log($e->getMessage());
-            return false;
-        }
+        $response = $this->callApi($url, $request);
 
+        // Parse the API response.
         $handler = new UpsTrackingXmlHandler();
-        $this->parseResponse($result, $handler);
-
-        if ($handler->errorOccurred) {
-            $errorMessage = 'Could not retrieve tracking information.';
-            if ($handler->isTrackingResponse) {
-                $errorMessage = $handler->error['ERRORDESCRIPTION'];
-            }
-            error_log($errorMessage);
-            return false;
-        }
-
+        $this->parseResponse($response, $handler);
         return $handler->getLastStatus();
     }
 }

@@ -1,4 +1,6 @@
 <?php
+require_once('UpsException.class.php');
+
 /**
  * The class to parse the UPS Tracking API response.
  */
@@ -12,8 +14,13 @@ class UpsTrackingXmlHandler {
     public $activityCount = 0;
     public $charData = array();
     public $error = array();
-    public $errorOccurred = false;
-    public $isTrackingResponse = false;
+
+    /**
+     * Indicate if an error occurs.
+     * @var boolean
+     */
+    private $errorOccurred = false;
+    private $isTrackingResponse = false;
 
     private $currentTag;
     private $depth = 0;
@@ -22,8 +29,9 @@ class UpsTrackingXmlHandler {
     private $lastStatus = "NA";
     private $path = array();
 
-    // === Public Methods === //
-
+    /**
+     * XML character data handler.
+     */
     public function characterData($parser, $data) {
         if ($this->inActivity) {
             $this->activity[$this->activityCount][implode("/", $this->path)] = $data;
@@ -42,29 +50,9 @@ class UpsTrackingXmlHandler {
         }
     }
 
-    public function endElement($parser, $name) {
-        $this->currentTag = '';
-
-        if ($this->depth > 1) {
-            array_pop($this->path);
-        }
-
-        switch ($name) {
-        case self::NODE_NAME_ACTIVITY:
-            $this->inActivity = false;
-            break;
-        case self::NODE_NAME_ERROR:
-            $this->inError = false;
-            break;
-        }
-
-        $this->depth--;
-    }
-
-    public function getLastStatus() {
-        return $this->lastStatus;
-    }
-
+    /**
+     * XML start element handler.
+     */
     public function startElement($parser, $name, $attrs) {
         $this->currentTag = $name;
         if ($this->depth > 1) {
@@ -87,5 +75,43 @@ class UpsTrackingXmlHandler {
         }
 
         $this->depth++;
+    }
+
+    /**
+     * XML end element handler.
+     */
+    public function endElement($parser, $name) {
+        $this->currentTag = '';
+
+        if ($this->depth > 1) {
+            array_pop($this->path);
+        }
+
+        switch ($name) {
+        case self::NODE_NAME_ACTIVITY:
+            $this->inActivity = false;
+            break;
+        case self::NODE_NAME_ERROR:
+            $this->inError = false;
+            break;
+        }
+
+        $this->depth--;
+    }
+
+    /**
+     * Get the last tracking status.
+     * @return string
+     * @throws Exception on error.
+     */
+    public function getLastStatus() {
+        if ($this->errorOccurred) {
+            $errorMessage = 'Could not retrieve tracking information.';
+            if ($this->isTrackingResponse) {
+                $errorMessage = $this->error['ERRORDESCRIPTION'];
+            }
+            throw new UpsException($errorMessage);
+        }
+        return $this->lastStatus;
     }
 }
