@@ -153,4 +153,24 @@ abstract class UpsApi {
 
         return $data;
     }
+
+    /**
+     * Parse API response.
+     * @param string $response
+     * @param object $xmlHandler One of @c UpsAcceptXmlHandler, @c UpsConfirmXmlHandler or @c UpsTrackingXmlHandler.
+     */
+    protected function parseResponse($response, $xmlHandler) {
+        // Initialize parser.
+        $xmlParser = xml_parser_create();
+
+        // Set callback functions.
+        xml_set_object($xmlParser, $xmlHandler);
+        xml_set_element_handler($xmlParser, 'startElement', 'endElement');
+        xml_set_character_data_handler($xmlParser, 'characterData');
+
+        xml_parse($xmlParser, $response);
+
+        // Clean up.
+        xml_parser_free($xmlParser);
+    }
 }
