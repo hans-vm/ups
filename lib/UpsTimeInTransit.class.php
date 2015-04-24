@@ -81,7 +81,7 @@ class UpsTimeInTransit extends UpsApi {
                 $xml->endElement();
                 $xml->startElement('ShipmentWeight');
                     $xml->startElement('UnitOfMeasurement');
-                        $xml->writeElement('Code', 'LBS');
+                        $xml->writeElement('Code', $this->getWeightUnit());
                     $xml->endElement();
                     $xml->writeElement('Weight', $this->weight);
                 $xml->endElement();
