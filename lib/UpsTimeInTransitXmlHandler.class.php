@@ -3,12 +3,16 @@
  * The class to parse the UPS Time In Transit API response.
  */
 class UpsTimeInTransitXmlHandler {
-    private $currentTag = array();
+    /**
+     * The full xPath to the current element.
+     * @var array
+     */
+    private $currentPath = array();
 
     private $service = array();
 
     public function characterData($parser, $data) {
-        $tag = implode('/', $this->currentTag);
+        $tag = implode('/', $this->currentPath);
         switch ($tag) {
             case 'TIMEINTRANSITRESPONSE/TRANSITRESPONSE/SERVICESUMMARY/SERVICE/CODE':
                 $this->service[] = array(
@@ -46,11 +50,11 @@ class UpsTimeInTransitXmlHandler {
     }
 
     public function endElement($parser, $name) {
-        array_pop($this->currentTag);
+        array_pop($this->currentPath);
     }
 
     public function startElement($parser, $name, $attrs) {
-        array_push($this->currentTag, $name);
+        array_push($this->currentPath, $name);
     }
 
     public function getService() {

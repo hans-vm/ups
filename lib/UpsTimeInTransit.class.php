@@ -2,6 +2,7 @@
 require_once('Address.class.php');
 require_once('UpsApi.class.php');
 require_once('UpsConstants.class.php');
+require_once('UpsException.class.php');
 require_once('UpsTimeInTransitXmlHandler.class.php');
 
 /**
@@ -37,13 +38,13 @@ class UpsTimeInTransit extends UpsApi {
 
     /**
      * Retrieve the delivery information.
-     * @return array An array of service summary/
+     * @return array An array of service summary.
      */
     public function getDeliveryInformation() {
         // Get the UPS Access Request XML.
         $request = $this->getAccessRequest();
 
-        // Compose TrackRequest XML document.
+        // Compose TimeInTransitRequest XML document.
         $xml = new XMLWriter();
         // Use memory for string output.
         $xml->openMemory();
@@ -92,12 +93,7 @@ class UpsTimeInTransit extends UpsApi {
 
         // Call the UPS Tracking API.
         $url = $this->isDemoMode() ? self::URL_TIME_IN_TRANSIT_DEMO : self::URL_TIME_IN_TRANSIT_LIVE;
-        try {
-            $response = $this->callApi($url, $request);
-        } catch (Exception $e) {
-            error_log($e->getMessage());
-            return false;
-        }
+        $response = $this->callApi($url, $request);
 
         // Parse the API response.
         $handler = new UpsTimeInTransitXmlHandler();
