@@ -12,12 +12,13 @@ class UpsRatingXmlHandler {
     private $currentPath = array();
 
     /**
-     * The shipping rate calculated. An associative array with following keys:
+     * The list of shipping rates calculated for all UPS services. An array of an associative array with following keys:
+     *  - {string} service: The code of UPS service type.
      *  - {string} currency: The currency code.
      *  - {float} amount: The rate.
      * @var array
      */
-    private $rate = array();
+    private $rates = array();
 
     /**
      * The response status code. 1 for success, 0 for failure.
@@ -37,11 +38,16 @@ class UpsRatingXmlHandler {
     public function characterData($parser, $data) {
         $tag = implode('/', $this->currentPath);
         switch ($tag) {
+            case 'RATINGSERVICESELECTIONRESPONSE/RATEDSHIPMENT/SERVICE/CODE':
+                $this->rates[] = array(
+                    'service' => $data
+                );
+                break;
             case 'RATINGSERVICESELECTIONRESPONSE/RATEDSHIPMENT/TOTALCHARGES/CURRENCYCODE':
-                $this->rate['currency'] = $data;
+                $this->rates[count($this->rates) - 1]['currency'] = $data;
                 break;
             case 'RATINGSERVICESELECTIONRESPONSE/RATEDSHIPMENT/TOTALCHARGES/MONETARYVALUE':
-                $this->rate['amount'] = (float)$data;
+                $this->rates[count($this->rates) - 1]['amount'] = (float)$data;
                 break;
             case 'RATINGSERVICESELECTIONRESPONSE/RESPONSE/RESPONSESTATUSCODE':
                 $this->statusCode = (int)$data;
@@ -67,16 +73,17 @@ class UpsRatingXmlHandler {
     }
 
     /**
-     * Retrieve the shipping rate.
-     * @return array An associative array with following keys:
+     * Retrieve the list of shipping rates for all UPS services.
+     * @return array An array of an associative array with following keys:
+     *  - {string} service: The code of UPS service type.
      *  - {string} currency: The currency code.
      *  - {float} amount: The rate.
      * @throws UpsException on error.
      */
-    public function getRate() {
+    public function getRates() {
         if (!$this->statusCode) {
             throw new UpsException($this->errorDescription);
         }
-        return $this->rate;
+        return $this->rates;
     }
 }

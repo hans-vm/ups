@@ -90,7 +90,7 @@ class UpsRating extends UpsApi {
                         $xml->writeElement('XpciVersion', '1.0001');
                     $xml->endElement();
                     $xml->writeElement('RequestAction', 'Rate');
-                    $xml->writeElement('RequestOption', 'Rate');
+                    $xml->writeElement('RequestOption', 'Shop');
                 $xml->endElement();
                 $xml->startElement('PickupType');
                     $xml->writeElement('Code', $this->pickupType);
@@ -160,7 +160,7 @@ class UpsRating extends UpsApi {
         // Parse the API response.
         $handler = new UpsRatingXmlHandler();
         $this->parseResponse($response, $handler);
-        return $handler->getRate();
+        return $handler->getRates();
     }
 
     /**
